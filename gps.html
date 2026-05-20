@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>GPS Sender</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    button {
+      padding: 15px 30px;
+      font-size: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Send GPS to ESP32</h1>
+
+  <button onclick="startTracking()">
+    START GPS
+  </button>
+
+  <h2 id="status">Waiting...</h2>
+
+  <script>
+
+    // CHANGE THIS
+    const espIP = "192.168.43.15";
+
+    let watchID;
+
+    function startTracking() {
+
+      if (!navigator.geolocation) {
+
+        alert("Geolocation not supported");
+        return;
+      }
+
+      watchID = navigator.geolocation.watchPosition(
+
+        async (position) => {
+
+          let lat = position.coords.latitude;
+          let lon = position.coords.longitude;
+          let alt = position.coords.altitude || 0;
+          let speed = position.coords.speed || 0;
+          let heading = position.coords.heading || 0;
+
+          document.getElementById("status").innerHTML =
+            `
+            Latitude: ${lat}<br>
+            Longitude: ${lon}<br>
+            Altitude: ${alt}<br>
+            Speed: ${speed}<br>
+            Heading: ${heading}
+            `;
+
+          let url =
+            `http://${espIP}/gps?lat=${lat}&lon=${lon}&alt=${alt}&speed=${speed}&heading=${heading}`;
+
+          try {
+
+            let response = await fetch(url);
+
+            let text = await response.text();
+
+            console.log(text);
+
+          } catch (err) {
+
+            console.log(err);
+          }
+
+        },
+
+        (error) => {
+
+          alert("GPS Error");
+          console.log(error);
+
+        },
+
+        {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 5000
+        }
+      );
+    }
+
+  </script>
+
+</body>
+
+</html>
